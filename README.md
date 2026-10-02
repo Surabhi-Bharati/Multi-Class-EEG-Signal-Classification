@@ -11,11 +11,7 @@ A Streamlit web application is also included for interactive EEG classification.
 ## 🌐 Live Demo
 
 🚀 **Streamlit App:**  
-Add your deployed Streamlit URL here after deployment.
-
-Example:
-
-https://your-app-name.streamlit.app/
+https://multi-class-eeg-signal-classification-fyvm9mvxvexzewhdv63pmp.streamlit.app/
 
 ---
 
