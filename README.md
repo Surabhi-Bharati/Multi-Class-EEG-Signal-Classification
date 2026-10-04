@@ -29,9 +29,11 @@ The project includes:
 - Correlation analysis
 - Feature distribution visualization
 - Multiple machine learning models
+- XGBoost classification
 - Model comparison
 - Confusion matrix analysis
 - Random Forest feature importance
+- XGBoost feature importance
 - Gaussian noise analysis
 - Impulse noise analysis
 - Final test evaluation

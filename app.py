@@ -1,13 +1,22 @@
 # ============================================================
 # MULTI-CLASS EEG SIGNAL CLASSIFICATION USING MACHINE LEARNING
-# Streamlit Application
 # ============================================================
 
+# Streamlit Application
+
+# ============================================================
+
+
 import streamlit as st
+
 import pandas as pd
+
 import numpy as np
+
 import joblib
+
 import matplotlib.pyplot as plt
+
 
 from pathlib import Path
 
@@ -15,6 +24,7 @@ from pathlib import Path
 # ============================================================
 # PAGE CONFIGURATION
 # ============================================================
+
 
 st.set_page_config(
     page_title="EEG Signal Classification",
@@ -28,18 +38,24 @@ st.set_page_config(
 # PROJECT PATHS
 # ============================================================
 
+
 BASE_DIR = Path(__file__).resolve().parent
 
-MODEL_PATH = BASE_DIR / "models" / "rf_model.pkl"
+
+MODEL_PATH = BASE_DIR / "models" / "xgb_model.pkl"
+
 GRAPHS_DIR = BASE_DIR / "graphs"
 
+
 GAUSSIAN_CSV = BASE_DIR / "gaussian_noise_results.csv"
+
 IMPULSE_CSV = BASE_DIR / "impulse_noise_results.csv"
 
 
 # ============================================================
 # FEATURES
 # ============================================================
+
 
 FEATURES = [
     f"X{i}"
@@ -50,6 +66,7 @@ FEATURES = [
 # ============================================================
 # CUSTOM CSS
 # ============================================================
+
 
 st.markdown(
     """
@@ -66,21 +83,27 @@ st.markdown(
                 rgba(37, 99, 235, 0.09),
                 transparent 28%
             ),
+
             radial-gradient(
                 circle at 90% 10%,
                 rgba(14, 165, 233, 0.07),
                 transparent 25%
             ),
+
             #080d18;
     }
+
 
     .main {
         background-color: transparent;
     }
 
+
     .block-container {
         padding-top: 2rem;
+
         padding-bottom: 3rem;
+
         max-width: 1450px;
     }
 
@@ -89,21 +112,29 @@ st.markdown(
        HEADINGS
     ====================================================== */
 
+
     h1 {
         color: #f8fafc !important;
+
         font-weight: 750 !important;
+
         letter-spacing: -0.6px;
     }
 
+
     h2 {
         color: #f1f5f9 !important;
+
         font-weight: 700 !important;
     }
 
+
     h3 {
         color: #e2e8f0 !important;
+
         font-weight: 650 !important;
     }
+
 
     p {
         color: #cbd5e1;
@@ -113,6 +144,7 @@ st.markdown(
     /* ======================================================
        SIDEBAR
     ====================================================== */
+
 
     section[data-testid="stSidebar"] {
         background:
@@ -125,6 +157,7 @@ st.markdown(
         border-right: 1px solid #1e293b;
     }
 
+
     section[data-testid="stSidebar"] p {
         color: #cbd5e1;
     }
@@ -134,23 +167,31 @@ st.markdown(
        METRICS
     ====================================================== */
 
+
     div[data-testid="metric-container"] {
         background: rgba(15, 23, 42, 0.85);
+
         border: 1px solid #26344a;
+
         border-radius: 16px;
+
         padding: 18px 20px;
 
         box-shadow:
             0 8px 25px rgba(0, 0, 0, 0.15);
     }
 
+
     div[data-testid="metric-container"] label {
         color: #94a3b8 !important;
+
         font-size: 0.85rem !important;
     }
 
+
     div[data-testid="stMetricValue"] {
         color: #f8fafc !important;
+
         font-weight: 750 !important;
     }
 
@@ -159,8 +200,10 @@ st.markdown(
        BUTTONS
     ====================================================== */
 
+
     .stButton > button {
         width: 100%;
+
         min-height: 45px;
 
         border-radius: 11px;
@@ -173,8 +216,10 @@ st.markdown(
             all 0.2s ease;
     }
 
+
     .stButton > button:hover {
         border-color: #60a5fa;
+
         transform: translateY(-1px);
     }
 
@@ -183,8 +228,10 @@ st.markdown(
        INPUT BOXES
     ====================================================== */
 
+
     div[data-baseweb="input"] {
         background-color: #0f172a;
+
         border-radius: 9px;
     }
 
@@ -193,8 +240,10 @@ st.markdown(
        SELECT BOXES
     ====================================================== */
 
+
     div[data-baseweb="select"] {
         background-color: #0f172a;
+
         border-radius: 9px;
     }
 
@@ -203,9 +252,12 @@ st.markdown(
        DATAFRAMES
     ====================================================== */
 
+
     div[data-testid="stDataFrame"] {
         border: 1px solid #26344a;
+
         border-radius: 12px;
+
         overflow: hidden;
     }
 
@@ -213,6 +265,7 @@ st.markdown(
     /* ======================================================
        EXPANDERS
     ====================================================== */
+
 
     div[data-testid="stExpander"] {
         background-color: rgba(15, 23, 42, 0.65);
@@ -227,9 +280,12 @@ st.markdown(
        DIVIDER
     ====================================================== */
 
+
     .section-divider {
         height: 1px;
+
         background-color: #1e293b;
+
         margin: 30px 0;
     }
 
@@ -237,6 +293,7 @@ st.markdown(
     /* ======================================================
        FOOTER
     ====================================================== */
+
 
     .footer {
         text-align: center;
@@ -253,9 +310,11 @@ st.markdown(
        RESULT ANCHOR
     ====================================================== */
 
+
     #classification-results {
         scroll-margin-top: 40px;
     }
+
 
     </style>
     """,
@@ -264,47 +323,56 @@ st.markdown(
 
 
 # ============================================================
-# LOAD RANDOM FOREST MODEL
+# LOAD XGBOOST MODEL
 # ============================================================
+
 
 @st.cache_resource
 def load_model():
 
     if not MODEL_PATH.exists():
+
         return None
+
 
     return joblib.load(
         MODEL_PATH
     )
 
 
-rf_model = load_model()
+xgb_model = load_model()
 
 
 # ============================================================
 # MODEL ERROR HANDLING
 # ============================================================
 
-if rf_model is None:
+
+if xgb_model is None:
 
     st.error(
-        "⚠️ Random Forest model could not be found."
+        "⚠️ XGBoost model could not be found."
     )
+
 
     st.markdown(
         f"""
         The application expects the trained model at:
 
+
         `{MODEL_PATH}`
+
 
         Your project should contain:
 
+
         ```text
         models/
-        └── rf_model.pkl
+        └── xgb_model.pkl
         ```
         """
     )
+
 
     st.stop()
 
@@ -313,18 +381,22 @@ if rf_model is None:
 # PROBABILITY CHART FUNCTION
 # ============================================================
 
+
 def create_probability_plot(
     probability_df
 ):
+
 
     fig, ax = plt.subplots(
         figsize=(8, 4)
     )
 
+
     bars = ax.bar(
         probability_df["Class"],
         probability_df["Probability (%)"]
     )
+
 
     ax.set_title(
         "Prediction Probability by EEG Class",
@@ -332,19 +404,23 @@ def create_probability_plot(
         fontweight="bold"
     )
 
+
     ax.set_xlabel(
         "EEG Class"
     )
 
+
     ax.set_ylabel(
         "Probability (%)"
     )
+
 
     maximum = (
         probability_df[
             "Probability (%)"
         ].max()
     )
+
 
     ax.set_ylim(
         0,
@@ -354,14 +430,17 @@ def create_probability_plot(
         )
     )
 
+
     ax.grid(
         axis="y",
         alpha=0.2
     )
 
+
     for bar in bars:
 
         height = bar.get_height()
+
 
         ax.text(
             bar.get_x()
@@ -378,7 +457,9 @@ def create_probability_plot(
             fontsize=9
         )
 
+
     fig.tight_layout()
+
 
     return fig
 
@@ -387,6 +468,7 @@ def create_probability_plot(
 # SIDEBAR
 # ============================================================
 
+
 st.sidebar.markdown(
     """
     # 🧠 EEG Classifier
@@ -394,6 +476,7 @@ st.sidebar.markdown(
     **Machine Learning Analysis System**
     """
 )
+
 
 st.sidebar.markdown("---")
 
@@ -417,24 +500,29 @@ st.sidebar.markdown(
     "### Project Information"
 )
 
+
 st.sidebar.write(
     "**Dataset:** BEED"
 )
+
 
 st.sidebar.write(
     "**Features:** 16 EEG features"
 )
 
+
 st.sidebar.write(
     "**Classes:** 4"
 )
 
-st.sidebar.write(
-    "**Final Model:** Random Forest"
-)
 
 st.sidebar.write(
-    "**Test Accuracy:** 95.67%"
+    "**Final Model:** XGBoost"
+)
+
+
+st.sidebar.write(
+    "**Test Accuracy:** 96.00%"
 )
 
 
@@ -451,11 +539,14 @@ st.sidebar.caption(
 # PAGE 1 — OVERVIEW
 # ============================================================
 
+
 if page == "🏠 Overview":
+
 
     st.title(
         "🧠 EEG Signal Classification"
     )
+
 
     st.caption(
         "Multi-Class EEG Signal Classification Using Machine Learning"
@@ -472,12 +563,13 @@ if page == "🏠 Overview":
     # PROJECT METRICS
     # --------------------------------------------------------
 
+
     col1, col2, col3, col4 = st.columns(4)
 
 
     col1.metric(
         "Final Test Accuracy",
-        "95.67%"
+        "96.00%"
     )
 
 
@@ -495,7 +587,7 @@ if page == "🏠 Overview":
 
     col4.metric(
         "Final Model",
-        "Random Forest"
+        "XGBoost"
     )
 
 
@@ -505,6 +597,7 @@ if page == "🏠 Overview":
     # --------------------------------------------------------
     # ABOUT PROJECT
     # --------------------------------------------------------
+
 
     st.subheader(
         "📌 About the Project"
@@ -516,27 +609,31 @@ if page == "🏠 Overview":
         This project focuses on **multi-class EEG signal
         classification** using machine learning techniques.
 
+
         The **BEED dataset** is used as the primary data source,
         containing **16 input EEG features** and **4 target
         classes**.
 
-        Four machine learning algorithms were evaluated:
+
+        Five machine learning algorithms were evaluated:
+
 
         **Logistic Regression, K-Nearest Neighbors,
-        Random Forest, and Support Vector Machine.**
+        Random Forest, Support Vector Machine, and XGBoost.**
         """
     )
 
 
     st.info(
-        "Random Forest achieved a final test accuracy of "
-        "**95.67%** on the unseen test dataset."
+        "XGBoost achieved a final test accuracy of "
+        "**96.00%** on the unseen test dataset."
     )
 
 
     # --------------------------------------------------------
     # WORKFLOW
     # --------------------------------------------------------
+
 
     st.subheader(
         "⚙️ System Workflow"
@@ -577,7 +674,7 @@ if page == "🏠 Overview":
         st.markdown("### 03")
 
         st.write(
-            "**Random Forest**"
+            "**XGBoost**"
         )
 
         st.caption(
@@ -608,6 +705,7 @@ if page == "🏠 Overview":
     # PROJECT HIGHLIGHTS
     # --------------------------------------------------------
 
+
     st.subheader(
         "✨ Project Highlights"
     )
@@ -620,7 +718,7 @@ if page == "🏠 Overview":
 
         st.info(
             "**Model Comparison**\n\n"
-            "Four machine learning algorithms "
+            "Five machine learning algorithms "
             "were evaluated."
         )
 
@@ -638,7 +736,7 @@ if page == "🏠 Overview":
 
         st.info(
             "**Final Evaluation**\n\n"
-            "Random Forest achieved 95.67% "
+            "XGBoost achieved 96.00% "
             "accuracy on unseen test data."
         )
 
@@ -647,11 +745,14 @@ if page == "🏠 Overview":
 # PAGE 2 — CLASSIFY EEG
 # ============================================================
 
+
 elif page == "🔬 Classify EEG":
+
 
     st.title(
         "🔬 Classify EEG Signal"
     )
+
 
     st.caption(
         "Enter the 16 EEG feature values and generate a "
@@ -669,8 +770,9 @@ elif page == "🔬 Classify EEG":
     # INPUT INFORMATION
     # --------------------------------------------------------
 
+
     st.info(
-        "The Random Forest model expects **16 numerical inputs** "
+        "The XGBoost model expects **16 numerical inputs** "
         "from X1 through X16. Enter values using the same feature "
         "format used during model training."
     )
@@ -679,6 +781,7 @@ elif page == "🔬 Classify EEG":
     # --------------------------------------------------------
     # INPUT SECTION
     # --------------------------------------------------------
+
 
     st.subheader(
         "🧾 EEG Feature Input"
@@ -698,9 +801,11 @@ elif page == "🔬 Classify EEG":
 
     for index, feature in enumerate(FEATURES):
 
+
         with input_columns[index % 4]:
 
             input_values[feature] = st.number_input(
+
                 feature,
 
                 value=0.0,
@@ -708,6 +813,7 @@ elif page == "🔬 Classify EEG":
                 format="%.4f",
 
                 key=f"eeg_input_{feature}"
+
             )
 
 
@@ -715,9 +821,9 @@ elif page == "🔬 Classify EEG":
     # CREATE DATAFRAME
     # --------------------------------------------------------
 
+
     input_df = pd.DataFrame(
         [input_values],
-
         columns=FEATURES
     )
 
@@ -732,6 +838,7 @@ elif page == "🔬 Classify EEG":
     # ANALYZE BUTTON
     # --------------------------------------------------------
 
+
     predict_button = st.button(
         "🔍 Analyze EEG Signal",
 
@@ -745,17 +852,20 @@ elif page == "🔬 Classify EEG":
     # PREDICTION
     # ========================================================
 
+
     if predict_button:
+
 
         try:
 
-            prediction = rf_model.predict(
+
+            prediction = xgb_model.predict(
                 input_df
             )
 
 
             probabilities = (
-                rf_model.predict_proba(
+                xgb_model.predict_proba(
                     input_df
                 )[0]
             )
@@ -763,13 +873,16 @@ elif page == "🔬 Classify EEG":
 
         except Exception as error:
 
+
             st.error(
                 "Prediction failed."
             )
 
+
             st.exception(
                 error
             )
+
 
             st.stop()
 
@@ -787,6 +900,7 @@ elif page == "🔬 Classify EEG":
         # RESULT ANCHOR
         # ----------------------------------------------------
 
+
         st.markdown(
             '<div id="classification-results"></div>',
             unsafe_allow_html=True
@@ -802,6 +916,7 @@ elif page == "🔬 Classify EEG":
         # ----------------------------------------------------
         # AUTO SCROLL
         # ----------------------------------------------------
+
 
         st.markdown(
             """
@@ -835,6 +950,7 @@ elif page == "🔬 Classify EEG":
         # CLASSIFICATION RESULT
         # ----------------------------------------------------
 
+
         st.subheader(
             "🎯 Classification Result"
         )
@@ -857,7 +973,7 @@ elif page == "🔬 Classify EEG":
 
         result3.metric(
             "Model Used",
-            "Random Forest"
+            "XGBoost"
         )
 
 
@@ -871,8 +987,9 @@ elif page == "🔬 Classify EEG":
         # RESULT MESSAGE
         # ----------------------------------------------------
 
+
         st.success(
-            f"The Random Forest model classified the entered "
+            f"The XGBoost model classified the entered "
             f"EEG feature pattern as **Class {predicted_class}**."
         )
 
@@ -881,11 +998,12 @@ elif page == "🔬 Classify EEG":
         # PROBABILITY DATA
         # ----------------------------------------------------
 
+
         probability_df = pd.DataFrame(
             {
                 "Class": [
                     f"Class {c}"
-                    for c in rf_model.classes_
+                    for c in xgb_model.classes_
                 ],
 
                 "Probability (%)": (
@@ -899,6 +1017,7 @@ elif page == "🔬 Classify EEG":
         # PROBABILITY SECTION
         # ----------------------------------------------------
 
+
         st.subheader(
             "📊 Prediction Probabilities"
         )
@@ -910,6 +1029,7 @@ elif page == "🔬 Classify EEG":
 
 
         with chart_col:
+
 
             probability_fig = (
                 create_probability_plot(
@@ -931,6 +1051,7 @@ elif page == "🔬 Classify EEG":
 
 
         with table_col:
+
 
             st.write(
                 "Probability Details"
@@ -955,6 +1076,7 @@ elif page == "🔬 Classify EEG":
         # ----------------------------------------------------
         # INPUT FEATURE GRAPH
         # ----------------------------------------------------
+
 
         st.markdown(
             '<div class="section-divider"></div>',
@@ -1031,18 +1153,22 @@ elif page == "🔬 Classify EEG":
         # INTERPRETATION
         # ----------------------------------------------------
 
+
         with st.expander(
             "ℹ️ Understand this prediction"
         ):
 
+
             st.write(
                 f"""
-                The trained Random Forest classifier predicted
+                The trained XGBoost classifier predicted
                 **Class {predicted_class}** for the entered EEG
                 feature pattern.
 
+
                 The highest model probability was
                 **{confidence:.2f}%**.
+
 
                 These probabilities represent the output of the
                 machine learning classifier. They should not be
@@ -1056,7 +1182,9 @@ elif page == "🔬 Classify EEG":
 # PAGE 3 — MODEL ANALYSIS
 # ============================================================
 
+
 elif page == "📊 Model Analysis":
+
 
     st.title(
         "📊 Model Analysis"
@@ -1079,27 +1207,51 @@ elif page == "📊 Model Analysis":
     # MODEL RESULTS
     # --------------------------------------------------------
 
+
     model_results = pd.DataFrame(
         {
             "Model": [
+
                 "Logistic Regression",
+
                 "KNN",
+
                 "Random Forest",
-                "SVM"
+
+                "SVM",
+
+                "XGBoost"
+
             ],
+
 
             "Validation Accuracy (%)": [
+
                 47.08,
+
                 95.58,
+
                 96.83,
-                75.25
+
+                75.25,
+
+                96.58
+
             ],
 
+
             "Macro F1 Score": [
+
                 0.48,
+
                 0.96,
+
                 0.97,
-                0.74
+
+                0.74,
+
+                0.97
+
             ]
         }
     )
@@ -1122,6 +1274,7 @@ elif page == "📊 Model Analysis":
     # --------------------------------------------------------
     # ACCURACY CHART
     # --------------------------------------------------------
+
 
     st.subheader(
         "📈 Validation Accuracy Comparison"
@@ -1175,10 +1328,13 @@ elif page == "📊 Model Analysis":
 
     for bar in bars:
 
+
         height = bar.get_height()
+
 
         model_ax.text(
             bar.get_x()
+
             + bar.get_width() / 2,
 
             height + 1,
@@ -1212,6 +1368,7 @@ elif page == "📊 Model Analysis":
     # FINAL MODEL METRICS
     # --------------------------------------------------------
 
+
     st.markdown(
         '<div class="section-divider"></div>',
         unsafe_allow_html=True
@@ -1219,7 +1376,7 @@ elif page == "📊 Model Analysis":
 
 
     st.subheader(
-        "🌲 Final Random Forest Model"
+        "🚀 Final XGBoost Model"
     )
 
 
@@ -1228,25 +1385,29 @@ elif page == "📊 Model Analysis":
 
     m1.metric(
         "Validation Accuracy",
-        "96.83%"
+
+        "96.58%"
     )
 
 
     m2.metric(
         "Test Accuracy",
-        "95.67%"
+
+        "96.00%"
     )
 
 
     m3.metric(
         "Macro F1 Score",
-        "0.97"
+
+        "0.96"
     )
 
 
     # --------------------------------------------------------
     # FEATURE IMPORTANCE
     # --------------------------------------------------------
+
 
     st.subheader(
         "🌲 Random Forest Feature Importance"
@@ -1258,13 +1419,14 @@ elif page == "📊 Model Analysis":
             "Feature": FEATURES,
 
             "Importance":
-                rf_model.feature_importances_
+                xgb_model.feature_importances_
         }
     )
 
 
     importance_df = (
         importance_df
+
         .sort_values(
             "Importance",
 
@@ -1296,7 +1458,7 @@ elif page == "📊 Model Analysis":
 
 
     importance_ax.set_title(
-        "Random Forest Feature Importance"
+        "XGBoost Feature Importance"
     )
 
 
@@ -1329,7 +1491,7 @@ elif page == "📊 Model Analysis":
 
     st.info(
         f"**{highest_feature['Feature']}** has the highest "
-        f"Random Forest feature importance "
+        f"XGBoost feature importance "
         f"({highest_feature['Importance']:.3f})."
     )
 
@@ -1338,14 +1500,17 @@ elif page == "📊 Model Analysis":
         "ℹ️ What does feature importance mean?"
     ):
 
+
         st.write(
             """
             Feature importance represents the relative contribution
-            of each input feature to the Random Forest's decision
+            of each input feature to the XGBoost model's decision
             process.
+
 
             A higher value indicates that the feature contributed
             more strongly to the model's classification decisions.
+
 
             Feature importance alone does not establish a biological
             or physiological meaning for an EEG feature.
@@ -1357,7 +1522,9 @@ elif page == "📊 Model Analysis":
 # PAGE 4 — NOISE ANALYSIS
 # ============================================================
 
+
 elif page == "🔊 Noise Analysis":
+
 
     st.title(
         "🔊 Noise Robustness Analysis"
@@ -1380,6 +1547,7 @@ elif page == "🔊 Noise Analysis":
     # INTRODUCTION
     # --------------------------------------------------------
 
+
     st.info(
         "Noise analysis evaluates how classification accuracy "
         "changes when increasing levels of artificial noise "
@@ -1391,12 +1559,14 @@ elif page == "🔊 Noise Analysis":
     # GAUSSIAN NOISE
     # --------------------------------------------------------
 
+
     st.subheader(
         "📉 Gaussian Noise"
     )
 
 
     if GAUSSIAN_CSV.exists():
+
 
         gaussian_df = pd.read_csv(
             GAUSSIAN_CSV
@@ -1424,11 +1594,13 @@ elif page == "🔊 Noise Analysis":
 
 
         accuracy_columns = [
+
             column
 
             for column in gaussian_df.columns
 
             if column != noise_column
+
         ]
 
 
@@ -1439,7 +1611,9 @@ elif page == "🔊 Noise Analysis":
 
         for column in accuracy_columns:
 
+
             gaussian_ax.plot(
+
                 gaussian_df[noise_column],
 
                 gaussian_df[column],
@@ -1449,6 +1623,7 @@ elif page == "🔊 Noise Analysis":
                 linewidth=2,
 
                 label=column
+
             )
 
 
@@ -1494,6 +1669,7 @@ elif page == "🔊 Noise Analysis":
 
     else:
 
+
         gaussian_image = (
             GRAPHS_DIR
             / "11_gaussian_noise_performance.png"
@@ -1502,13 +1678,16 @@ elif page == "🔊 Noise Analysis":
 
         if gaussian_image.exists():
 
+
             st.image(
                 str(gaussian_image),
 
                 use_container_width=True
             )
 
+
         else:
+
 
             st.warning(
                 "Gaussian noise results were not found."
@@ -1518,6 +1697,7 @@ elif page == "🔊 Noise Analysis":
     # --------------------------------------------------------
     # IMPULSE NOISE
     # --------------------------------------------------------
+
 
     st.markdown(
         '<div class="section-divider"></div>',
@@ -1531,6 +1711,7 @@ elif page == "🔊 Noise Analysis":
 
 
     if IMPULSE_CSV.exists():
+
 
         impulse_df = pd.read_csv(
             IMPULSE_CSV
@@ -1558,11 +1739,13 @@ elif page == "🔊 Noise Analysis":
 
 
         accuracy_columns = [
+
             column
 
             for column in impulse_df.columns
 
             if column != noise_column
+
         ]
 
 
@@ -1573,7 +1756,9 @@ elif page == "🔊 Noise Analysis":
 
         for column in accuracy_columns:
 
+
             impulse_ax.plot(
+
                 impulse_df[noise_column],
 
                 impulse_df[column],
@@ -1583,6 +1768,7 @@ elif page == "🔊 Noise Analysis":
                 linewidth=2,
 
                 label=column
+
             )
 
 
@@ -1628,6 +1814,7 @@ elif page == "🔊 Noise Analysis":
 
     else:
 
+
         impulse_image = (
             GRAPHS_DIR
             / "12_impulse_noise_performance.png"
@@ -1636,13 +1823,16 @@ elif page == "🔊 Noise Analysis":
 
         if impulse_image.exists():
 
+
             st.image(
                 str(impulse_image),
 
                 use_container_width=True
             )
 
+
         else:
+
 
             st.warning(
                 "Impulse noise results were not found."
@@ -1652,6 +1842,7 @@ elif page == "🔊 Noise Analysis":
     # --------------------------------------------------------
     # OBSERVATIONS
     # --------------------------------------------------------
+
 
     st.markdown(
         '<div class="section-divider"></div>',
@@ -1669,6 +1860,7 @@ elif page == "🔊 Noise Analysis":
 
     with o1:
 
+
         st.info(
             "**Gaussian Noise**\n\n"
             "KNN showed comparatively strong performance "
@@ -1678,6 +1870,7 @@ elif page == "🔊 Noise Analysis":
 
     with o2:
 
+
         st.info(
             "**Impulse Noise**\n\n"
             "Random Forest maintained strong performance "
@@ -1686,6 +1879,7 @@ elif page == "🔊 Noise Analysis":
 
 
     with o3:
+
 
         st.info(
             "**Overall Trend**\n\n"
@@ -1697,6 +1891,7 @@ elif page == "🔊 Noise Analysis":
 # ============================================================
 # FOOTER
 # ============================================================
+
 
 st.markdown(
     '<div class="section-divider"></div>',
@@ -1716,11 +1911,14 @@ st.markdown(
 
     BEED Dataset
     &nbsp;•&nbsp;
-    Random Forest
+
+    XGBoost
     &nbsp;•&nbsp;
+
     Streamlit
 
     </div>
     """,
+
     unsafe_allow_html=True
 )
